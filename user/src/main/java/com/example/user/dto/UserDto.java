@@ -3,6 +3,7 @@ package com.example.user.dto;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class UserDto {
@@ -11,6 +12,7 @@ public class UserDto {
     private String pwd;
     private String userId;
     private Date createdAt;
-
     private String encryptedPwd;
+
+    private List<ResponseOrder> orders;
 }
