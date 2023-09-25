@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/user-service")
 public class UserController {
     private final UserService service;
     private final Greeting greeting;

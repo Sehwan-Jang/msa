@@ -1,12 +1,14 @@
 package com.example.user.service;
 
-import com.example.user.domain.User;
+import com.example.user.domain.UserEntity;
 import com.example.user.dto.ResponseOrder;
 import com.example.user.dto.UserDto;
 import com.example.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,21 +30,21 @@ public class UserServiceImpl implements UserService {
     public UserDto createUser(UserDto userDto) {
         userDto.setUserId(UUID.randomUUID().toString());
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
-        User user = modelMapper.map(userDto, User.class);
-        user.setEncryptedPwd(encoder.encode(userDto.getPwd()));
+        UserEntity userEntity = modelMapper.map(userDto, UserEntity.class);
+        userEntity.setEncryptedPwd(encoder.encode(userDto.getPwd()));
 
-        User save = userRepository.save(user);
+        UserEntity save = userRepository.save(userEntity);
 
         return modelMapper.map(save, UserDto.class);
     }
 
     @Override
     public UserDto getUserByUserId(String userId) {
-        User user = userRepository.findByUserId(userId)
+        UserEntity userEntity = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not Found"));
 
         List<ResponseOrder> orders = new ArrayList<>();
-        UserDto userDto = modelMapper.map(user, UserDto.class);
+        UserDto userDto = modelMapper.map(userEntity, UserDto.class);
         userDto.setOrders(orders);
 
         return userDto;
@@ -51,7 +53,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public Collection<UserDto> getAllUsers() {
         return userRepository.findAll().stream()
-                .map(user -> modelMapper.map(user, UserDto.class))
+                .map(userEntity -> modelMapper.map(userEntity, UserDto.class))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        UserEntity userEntity = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException(username));
+        return new User(userEntity.getEmail(), userEntity.getEncryptedPwd(),
+                true, true, true, true,
+                new ArrayList<>());
     }
 }
