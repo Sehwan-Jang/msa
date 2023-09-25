@@ -4,6 +4,7 @@ import com.example.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -27,9 +28,9 @@ import javax.sql.DataSource;
 public class WebSecurity {
 
     private final AuthenticationConfiguration authConfig;
-    private final DataSource dataSource;
     private final UserService userService;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final Environment environment;
+
 
     @Bean
     protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
@@ -49,8 +50,9 @@ public class WebSecurity {
     }
 
     private AuthenticationFilter getAuthenticationFilter() throws Exception {
-        AuthenticationFilter authenticationFilter = new AuthenticationFilter();
-        authenticationFilter.setAuthenticationManager(authConfig.getAuthenticationManager());
+        AuthenticationManager authenticationManager = authConfig.getAuthenticationManager();
+        AuthenticationFilter authenticationFilter = new AuthenticationFilter(authenticationManager,
+                userService, environment);
         return authenticationFilter;
     }
 }
