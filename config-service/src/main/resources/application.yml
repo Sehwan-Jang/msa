@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: config-service
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
   cloud:
     config:
       server:
@@ -15,3 +20,9 @@ spring:
           search-locations: file:///C:/Users/DIR-N-151/Documents/projects/git-local-repo
   profiles:
     active: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, busrefresh, busenv
