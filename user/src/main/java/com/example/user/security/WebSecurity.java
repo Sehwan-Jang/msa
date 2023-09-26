@@ -17,8 +17,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import javax.sql.DataSource;
 
@@ -33,14 +35,21 @@ public class WebSecurity {
 
 
     @Bean
-    protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
+    public MvcRequestMatcher.Builder mvc(HandlerMappingIntrospector introspector) {
+        return new MvcRequestMatcher.Builder(introspector);
+    }
+
+    @Bean
+    protected SecurityFilterChain configure(HttpSecurity http, MvcRequestMatcher.Builder mvc) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
 //        http.authorizeHttpRequests(authorize -> authorize.requestMatchers(AntPathRequestMatcher.antMatcher("/**")).permitAll());
-        IpAddressMatcher hasIpAddress = new IpAddressMatcher("127.0.0.1");
+        IpAddressMatcher hasIpv4 = new IpAddressMatcher("127.0.0.1");
+        IpAddressMatcher hasIpv6 = new IpAddressMatcher("0:0:0:0:0:0:0:1");
+        http.authorizeHttpRequests(authorize -> authorize.requestMatchers(mvc.pattern("/actuator/**")).permitAll());
         http.authorizeHttpRequests(authorize ->
-                authorize.requestMatchers(AntPathRequestMatcher.antMatcher("/**"))
+                authorize.requestMatchers(mvc.pattern("/**"))
                         .access((authentication, object) ->
-                               new AuthorizationDecision(hasIpAddress.matches(object.getRequest()))
+                               new AuthorizationDecision(hasIpv4.matches(object.getRequest()) || hasIpv6.matches(object.getRequest()))
                         )
         ).addFilter(getAuthenticationFilter());
 

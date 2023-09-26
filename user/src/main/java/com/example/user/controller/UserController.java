@@ -3,7 +3,6 @@ package com.example.user.controller;
 import com.example.user.dto.ResponseUser;
 import com.example.user.dto.UserDto;
 import com.example.user.service.UserService;
-import com.example.user.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RestController
@@ -26,8 +24,12 @@ public class UserController {
 
     @GetMapping("/health_check")
     public String status() {
-        return String.format("It's Working in User Service on PORT %s",
-                environment.getProperty("local.server.port"));
+        return String.format("It's Working in User Service" +
+                " PORT(local) = " + environment.getProperty("local.server.port") +
+                " PORT(server) = " + environment.getProperty("server.port") +
+                " TOKEN SECRET = " + environment.getProperty("token.secret") +
+                " TOKEN EXPIRATION TIME = " + environment.getProperty("token.expiration_time"))
+                ;
     }
 
     @GetMapping("/welcome")
