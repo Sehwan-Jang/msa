@@ -58,6 +58,8 @@ public class UserController {
 
     @GetMapping("/users/{userId}")
     public ResponseEntity<ResponseUser> getUser(@PathVariable("userId") String userId) {
+        modelMapper.typeMap(UserDto.class, ResponseUser.class)
+                .addMapping(UserDto::getOrders, ResponseUser::setResponseOrders);
         UserDto userDto = service.getUserByUserId(userId);
         ResponseUser responseUser = modelMapper.map(userDto, ResponseUser.class);
         return ResponseEntity.ok(responseUser);

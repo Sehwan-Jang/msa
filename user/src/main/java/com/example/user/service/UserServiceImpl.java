@@ -7,23 +7,28 @@ import com.example.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
+    public static final String ORDER_SERVICE_URL = "order_service.url";
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
+    private final RestTemplate restTemplate;
+    private final Environment environment;
     private ModelMapper modelMapper = new ModelMapper();
 
     @Override
@@ -43,9 +48,14 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not Found"));
 
-        List<ResponseOrder> orders = new ArrayList<>();
+        String orderUrl = String.format(Objects.requireNonNull(environment.getProperty(ORDER_SERVICE_URL)), userId);
+        ResponseEntity<List<ResponseOrder>> response =
+                restTemplate.exchange(orderUrl, HttpMethod.GET, null,
+                        new ParameterizedTypeReference<>() {
+                });
+
         UserDto userDto = modelMapper.map(userEntity, UserDto.class);
-        userDto.setOrders(orders);
+        userDto.setOrders(response.getBody());
 
         return userDto;
     }
