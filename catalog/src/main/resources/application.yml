@@ -31,3 +31,6 @@ eureka:
       defaultZone: http://localhost:8761/eureka
   instance:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+kafka:
+  bootstrap: 192.168.0.113:9092
