@@ -10,7 +10,7 @@ import java.util.Date;
 @Data
 @Table(name = "catalog")
 @Entity
-public class Catalog implements Serializable {
+public class Catalog extends BaseEntity implements Serializable {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,9 +22,6 @@ public class Catalog implements Serializable {
     private Integer stock;
     @Column(nullable = false)
     private Integer unitPrice;
-    @Column(nullable = false,  updatable = false, insertable = false)
-    @ColumnDefault(value = "CURRENT_TIMESTAMP")
-    private Date createdAt;
 
     public void sold(int qty) {
         this.stock -= qty;

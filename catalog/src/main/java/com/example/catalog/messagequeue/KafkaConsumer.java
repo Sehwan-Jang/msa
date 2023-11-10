@@ -9,25 +9,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 @Service
 public class KafkaConsumer {
 
     private final CatalogRepository repository;
     private final ObjectMapper objectMapper;
     
-    @KafkaListener(topics = "example-catalog-topic") 
+    @KafkaListener(topics = "example-catalog-service")
     public void updateQuantity(String message) {
         log.info("kafka Message : {}", message);
 
         Map<Object, Object> map = new HashMap<>();
         try {
-            objectMapper.readValue(message, new TypeReference<Map<Object, Object>>() {});
+            map = objectMapper.readValue(message, new TypeReference<Map<Object, Object>>() {});
         } catch (JsonProcessingException e) {
             log.error("error : ", e);
         }

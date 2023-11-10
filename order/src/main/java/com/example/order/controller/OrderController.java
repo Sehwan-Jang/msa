@@ -3,10 +3,13 @@ package com.example.order.controller;
 import com.example.order.dto.OrderDto;
 import com.example.order.dto.RequestOrder;
 import com.example.order.dto.ResponseOrder;
+import com.example.order.messagequeue.KafkaProducer;
+import com.example.order.messagequeue.OrderCreateEvent;
 import com.example.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +25,7 @@ public class OrderController {
     private final Environment environment;
     private final OrderService orderService;
     private final ModelMapper modelMapper;
+    private final ApplicationEventPublisher publisher;
 
     @GetMapping("/health_check")
     public String status() {
@@ -34,6 +38,10 @@ public class OrderController {
         OrderDto dto = modelMapper.map(orderDetails, OrderDto.class);
         dto.setUserId(userId);
         OrderDto created = orderService.createOrder(dto);
+
+        // event produce
+        publisher.publishEvent(new OrderCreateEvent("example-catalog-service", created));
+
         ResponseOrder responseOrder = modelMapper.map(created, ResponseOrder.class);
         return ResponseEntity.created(URI.create("/order-service/orders/" + created.getOrderId()))
                 .body(responseOrder);

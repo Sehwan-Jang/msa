@@ -11,7 +11,7 @@ import java.util.Date;
 @Getter
 @Table(name = "orders")
 @Entity
-public class Order implements Serializable {
+public class Order extends BaseEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +29,4 @@ public class Order implements Serializable {
     private String userId;
     @Column(nullable = false)
     private String orderId;
-    @Column(nullable = false, updatable = false, insertable = false)
-    @ColumnDefault(value = "CURRENT_TIMESTAMP")
-    private Date createdAt;
 }
