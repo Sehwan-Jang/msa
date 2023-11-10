@@ -5,17 +5,20 @@ import com.example.order.dto.RequestOrder;
 import com.example.order.dto.ResponseOrder;
 import com.example.order.messagequeue.KafkaProducer;
 import com.example.order.messagequeue.OrderCreateEvent;
+import com.example.order.messagequeue.OrderProducer;
 import com.example.order.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +28,7 @@ public class OrderController {
     private final Environment environment;
     private final OrderService orderService;
     private final ModelMapper modelMapper;
-    private final ApplicationEventPublisher publisher;
+    private final OrderProducer producer;
 
     @GetMapping("/health_check")
     public String status() {
@@ -37,14 +40,17 @@ public class OrderController {
     public ResponseEntity<ResponseOrder> createOrder(@PathVariable("userId") String userId, @RequestBody RequestOrder orderDetails) {
         OrderDto dto = modelMapper.map(orderDetails, OrderDto.class);
         dto.setUserId(userId);
-        OrderDto created = orderService.createOrder(dto);
 
-        // event produce
-        publisher.publishEvent(new OrderCreateEvent("example-catalog-service", created));
+//        OrderDto created = orderService.createOrder(dto);
+//        ResponseOrder responseOrder = modelMapper.map(created, ResponseOrder.class);
 
-        ResponseOrder responseOrder = modelMapper.map(created, ResponseOrder.class);
-        return ResponseEntity.created(URI.create("/order-service/orders/" + created.getOrderId()))
-                .body(responseOrder);
+        dto.setOrderId(UUID.randomUUID().toString());
+        dto.setTotalPrice(orderDetails.getQty() * orderDetails.getUnitPrice());
+
+        OrderDto order = producer.send("orders", dto);
+        ResponseOrder responseOrder = modelMapper.map(order, ResponseOrder.class);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseOrder);
     }
 
     @GetMapping("/{userId}/orders")
