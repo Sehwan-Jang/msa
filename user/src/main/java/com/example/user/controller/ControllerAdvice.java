@@ -13,6 +13,6 @@ public class ControllerAdvice {
     @ExceptionHandler(FeignException.class)
     public ResponseEntity<String> handle(FeignException e) {
         log.error(e.getMessage());
-        return ResponseEntity.notFound().build();
+        return ResponseEntity.internalServerError().body(e.getMessage());
     }
 }

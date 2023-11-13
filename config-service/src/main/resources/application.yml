@@ -16,10 +16,10 @@ spring:
           uri: https://github.com/Sehwan-Jang/msa-cloud-config.git
           username: Sehwan-Jang
           password: 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
-        native:
-          search-locations: file:///C:/Users/DIR-N-151/Documents/projects/git-local-repo
-  profiles:
-    active: native
+#        native:
+#          search-locations: file:///C:/Users/DIR-N-151/Documents/projects/git-local-repo
+#  profiles:
+#    active: native
 
 management:
   endpoints:

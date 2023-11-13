@@ -1,6 +1,5 @@
 package com.example.user.service;
 
-import com.example.user.client.FeignErrorDecoder;
 import com.example.user.client.OrderServiceClient;
 import com.example.user.domain.UserEntity;
 import com.example.user.dto.ResponseOrder;
@@ -9,18 +8,17 @@ import com.example.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.env.Environment;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.cloud.client.circuitbreaker.CircuitBreaker;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -30,9 +28,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder encoder;
     private final OrderServiceClient orderServiceClient;
-    private final FeignErrorDecoder errorDecoder;
-    //    private final RestTemplate restTemplate;
-    //    private final Environment environment;
+    private final CircuitBreaker circuitBreaker;
+
     private ModelMapper modelMapper = new ModelMapper();
 
     @Override
@@ -59,7 +56,12 @@ public class UserServiceImpl implements UserService {
 //                        new ParameterizedTypeReference<>() {
 //                });
         /* use feign client */
-        List<ResponseOrder> orders = orderServiceClient.getOrders(userId);
+//        List<ResponseOrder> orders = orderServiceClient.getOrders(userId);
+
+        /* use circuit breaker */
+        List<ResponseOrder> orders = circuitBreaker.run(() -> orderServiceClient.getOrders(userId),
+                throwable -> new ArrayList<>());
+
         userDto.setOrders(orders);
 
         return userDto;
