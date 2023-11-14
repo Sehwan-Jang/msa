@@ -7,6 +7,8 @@ import com.example.order.messagequeue.KafkaProducer;
 import com.example.order.messagequeue.OrderCreateEvent;
 import com.example.order.messagequeue.OrderProducer;
 import com.example.order.service.OrderService;
+import io.micrometer.observation.annotation.Observed;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -22,6 +24,7 @@ import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
+//@Observed
 @RequestMapping("/order-service")
 @RestController
 public class OrderController {
@@ -37,7 +40,7 @@ public class OrderController {
     }
 
     @PostMapping("/{userId}/orders")
-    public ResponseEntity<ResponseOrder> createOrder(@PathVariable("userId") String userId, @RequestBody RequestOrder orderDetails) {
+    public ResponseEntity<ResponseOrder> createOrder( @PathVariable("userId") String userId, @RequestBody RequestOrder orderDetails) {
         OrderDto dto = modelMapper.map(orderDetails, OrderDto.class);
         dto.setUserId(userId);
 
@@ -47,17 +50,21 @@ public class OrderController {
         dto.setOrderId(UUID.randomUUID().toString());
         dto.setTotalPrice(orderDetails.getQty() * orderDetails.getUnitPrice());
 
+        log.info("Before add order data");
         OrderDto order = producer.send("orders", dto);
+        log.info("After add order data");
         ResponseOrder responseOrder = modelMapper.map(order, ResponseOrder.class);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(responseOrder);
     }
 
     @GetMapping("/{userId}/orders")
-    public ResponseEntity<List<ResponseOrder>> getOrder(@PathVariable("userId") String userId) {
+    public ResponseEntity<List<ResponseOrder>> getOrder(HttpServletRequest request, @PathVariable("userId") String userId) {
+        log.info("Before retrieve order data");
         List<ResponseOrder> orders = orderService.getAllOrdersByUserId(userId).stream()
                 .map(order -> modelMapper.map(order, ResponseOrder.class))
                 .toList();
+        log.info("After retrieve order data");
         return ResponseEntity.ok(orders);
     }
 

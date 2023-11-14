@@ -1,9 +1,13 @@
 package com.example.user;
 
+import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.spring.web.TracingClientHttpRequestInterceptor;
 import com.example.user.client.FeignErrorDecoder;
 import feign.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -27,15 +31,24 @@ public class UserApplication {
         return new BCryptPasswordEncoder();
     }
 
+//    @Bean
+//    public Logger.Level feignLoggerLevel() {
+//        return Logger.Level.FULL;
+//    }
+
     @Bean
-    public Logger.Level feignLoggerLevel() {
-        return Logger.Level.FULL;
+    public HttpTracing create(Tracing tracing) {
+        return HttpTracing
+                .newBuilder(tracing)
+                .build();
     }
 
-//    @LoadBalanced
-//    @Bean
-//    public RestTemplate getRestTemplate() {
-//        return new RestTemplate();
-//    }
+    @LoadBalanced
+    @Bean
+    public RestTemplate restTemplate(HttpTracing httpTracing) {
+        return new RestTemplateBuilder()
+                .interceptors(TracingClientHttpRequestInterceptor.create(httpTracing))
+                .build();
+    }
 
 }

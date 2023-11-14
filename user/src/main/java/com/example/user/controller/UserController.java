@@ -4,6 +4,7 @@ import com.example.user.dto.ResponseUser;
 import com.example.user.dto.UserDto;
 import com.example.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.core.env.Environment;
@@ -14,6 +15,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 public class UserController {
@@ -41,6 +43,7 @@ public class UserController {
     public ResponseEntity<ResponseUser> createUser(@RequestBody RequestUser request) {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         UserDto userDto = modelMapper.map(request, UserDto.class);
+
         UserDto user = service.createUser(userDto);
 
         return ResponseEntity.created(URI.create(user.getUserId()))
@@ -60,6 +63,7 @@ public class UserController {
     public ResponseEntity<ResponseUser> getUser(@PathVariable("userId") String userId) {
         modelMapper.typeMap(UserDto.class, ResponseUser.class)
                 .addMapping(UserDto::getOrders, ResponseUser::setResponseOrders);
+        log.info("User Controller");
         UserDto userDto = service.getUserByUserId(userId);
         ResponseUser responseUser = modelMapper.map(userDto, ResponseUser.class);
         return ResponseEntity.ok(responseUser);
